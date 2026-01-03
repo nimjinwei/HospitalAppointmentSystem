@@ -30,7 +30,8 @@ public:
     string getPhone() const { return phone; }
     string getRoom() const { return room; }
     string getPassword() const { return password; }
-    void setPassword(string newPassword) { password = newPassword; }
+    void setPassword(string newPassword); // store hashed password
+    void setPasswordHash(const string& hash); // store already-hashed password
 
     // Availability management
     void addUnavailableDate(string date);

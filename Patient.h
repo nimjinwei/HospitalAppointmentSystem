@@ -26,7 +26,8 @@ public:
     int getAge() const { return age; }
     string getPhone() const { return phone; }
     string getPassword() const { return password; }
-    void setPassword(string newPassword) { password = newPassword; }
+    void setPassword(string newPassword); // store hashed password
+    void setPasswordHash(const string& hash); // store already-hashed password
     
     void displayPatient() const;
     string toFileString() const;

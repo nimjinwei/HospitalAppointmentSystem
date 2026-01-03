@@ -3,16 +3,28 @@
 
 #include "LinkedList.h"
 #include "Stack.h"
+#include "HashTable.h"
 #include "Doctor.h"
 #include "Patient.h"
 #include "Appointment.h"
 #include <string>
+
+// Helper functions to extract IDs (needed for HashTable)
+inline std::string getDoctorIDFromObj(const Doctor& d) { return d.getDoctorID(); }
+inline std::string getPatientIDFromObj(const Patient& p) { return p.getPatientID(); }
+inline std::string getApptIDFromObj(const Appointment& a) { return a.getAppointmentID(); }
 
 class HospitalSystem {
 private:
     LinkedList<Doctor> doctors;
     LinkedList<Patient> patients;
     LinkedList<Appointment> appointments;
+    
+    //Hash Tables for O(1) ID lookups
+    HashTable<Doctor>* doctorHashTable;
+    HashTable<Patient>* patientHashTable;
+    HashTable<Appointment>* apptHashTable;
+
     Stack<string> logs;
     string adminPassword = "admin123";
     

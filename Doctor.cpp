@@ -1,4 +1,5 @@
 #include "Doctor.h"
+#include "sha256.h"
 #include "Algorithms.h" // for splitString
 
 Doctor::Doctor() {}
@@ -13,7 +14,18 @@ void Doctor::setDoctorInfo(string id, string name, string spec, string phone, st
     this->specialization = spec;
     this->phone = phone;
     this->room = room;
-    this->password = pwd;
+    // pwd may be a plaintext password or a stored hash (hex 64 chars). Detect and set appropriately.
+    bool looksLikeHash = (pwd.size() == 64);
+    if(looksLikeHash) setPasswordHash(pwd);
+    else setPassword(pwd);
+}
+
+void Doctor::setPassword(string newPassword) {
+    this->password = sha256(newPassword);
+}
+
+void Doctor::setPasswordHash(const string& hash) {
+    this->password = hash;
 }
 
 void Doctor::addUnavailableDate(string date) {

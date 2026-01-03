@@ -10,6 +10,8 @@
 
 namespace fs = std::filesystem;
 
+#include "sha256.h"
+
 // Comparison functions for sorting
 bool compareDocName(const Doctor& a, const Doctor& b) { return a.getName() > b.getName(); }
 bool compareDocSpec(const Doctor& a, const Doctor& b) { return a.getSpecialization() > b.getSpecialization(); }
@@ -45,11 +47,17 @@ namespace SearchHelpers {
 }
 
 HospitalSystem::HospitalSystem() {
+    doctorHashTable = new HashTable<Doctor>(getDoctorIDFromObj);
+    patientHashTable = new HashTable<Patient>(getPatientIDFromObj);
+    apptHashTable = new HashTable<Appointment>(getApptIDFromObj);
     loadData();
 }
 
 HospitalSystem::~HospitalSystem() {
     saveData();
+    delete doctorHashTable;
+    delete patientHashTable;
+    delete apptHashTable;
 }
 
 // ================= FILE HANDLING =================
@@ -107,6 +115,9 @@ void HospitalSystem::loadData() {
                 // handle unavailable dates
                 if(curr) d.loadDatesFromString(curr->data);
                 doctors.append(d);
+                // insert pointer to the object stored in the main doctors list
+                Node<Doctor>* lastDoc = doctors.getTail();
+                if (lastDoc) doctorHashTable->insert(&(lastDoc->data));
             }
         }
         docFile.close();
@@ -126,7 +137,10 @@ void HospitalSystem::loadData() {
                 string phone = curr->data; curr = curr->next;
                 string pwd = curr->data;
                 
-                patients.append(Patient(id, name, age, phone, pwd));
+                Patient p(id, name, age, phone, pwd);
+                patients.append(p);
+                Node<Patient>* lastPat = patients.getTail();
+                if (lastPat) patientHashTable->insert(&(lastPat->data));
             }
         }
         patFile.close();
@@ -172,6 +186,8 @@ void HospitalSystem::addDoctor(const Doctor& d) {
         return;
     }
     doctors.append(d);
+    Node<Doctor>* lastDoc = doctors.getTail();
+    if (lastDoc) doctorHashTable->insert(&(lastDoc->data));
     
     // [Stack] Log Activity
     logs.push("Admin added Doctor: " + d.getName() + " (" + d.getDoctorID() + ")");
@@ -183,7 +199,7 @@ Doctor* HospitalSystem::searchDoctorByID(string id) {
     // Use Sequential Search: O(n) worst case, O(1) best case
     // Stops immediately when ID is found (exact match, unique ID)
     SearchHelpers::searchID = id;
-    return sequentialSearch<Doctor>(doctors, SearchHelpers::matchDoctorByID);
+    return doctorHashTable->search(id);
 }
 
 void HospitalSystem::deleteDoctor(string id) {
@@ -192,6 +208,7 @@ void HospitalSystem::deleteDoctor(string id) {
         if(curr->data.getDoctorID() == id) {
             string docName = curr->data.getName();
             doctors.removeNode(curr);
+            doctorHashTable->remove(id);
             
             // [Stack] Log Activity
             logs.push("Admin deleted Doctor: " + docName + " (" + id + ")");
@@ -227,7 +244,7 @@ void HospitalSystem::sortDoctorsBySpecialization() {
 }
 
 bool HospitalSystem::doctorExists(string id) {
-    return searchDoctorByID(id) != nullptr;
+    return doctorHashTable->exists(id);
 }
 
 void HospitalSystem::editDoctor(string id) {
@@ -240,6 +257,7 @@ void HospitalSystem::editDoctor(string id) {
         cout << "Enter new phone: "; cin.ignore(); getline(cin, phone);
         cout << "Enter new room: "; getline(cin, room);
         d->setDoctorInfo(id, name, spec, phone, room, d->getPassword());
+        doctorHashTable->update(id, *d);
         
         // [Stack] Log Activity
         logs.push("Admin edited Doctor: " + id);
@@ -281,6 +299,8 @@ void HospitalSystem::addPatient(const Patient& p) {
         return;
     }
     patients.append(p);
+    Node<Patient>* lastPat = patients.getTail();
+    if (lastPat) patientHashTable->insert(&(lastPat->data));
     
     // [Stack] Log Activity
     logs.push("New Patient registered: " + p.getName() + " (" + p.getPatientID() + ")");
@@ -292,7 +312,7 @@ Patient* HospitalSystem::searchPatientByID(string id) {
     // Use Sequential Search: O(n) worst case, O(1) best case
     // Stops immediately when ID is found (exact match, unique ID)
     SearchHelpers::searchID = id;
-    return sequentialSearch<Patient>(patients, SearchHelpers::matchPatientByID);
+    return patientHashTable->search(id);
 }
 
 void HospitalSystem::displayAllPatients() {
@@ -308,7 +328,7 @@ void HospitalSystem::sortPatientsByName() {
     cout << "Sorted by name.\n";
 }
 
-bool HospitalSystem::patientExists(string id) { return searchPatientByID(id) != nullptr; }
+bool HospitalSystem::patientExists(string id) { return patientHashTable->exists(id); }
 
 void HospitalSystem::editPatient(string id) {
     Patient* p = searchPatientByID(id);
@@ -332,6 +352,7 @@ void HospitalSystem::deletePatient(string id) {
         if(curr->data.getPatientID() == id) {
             string patName = curr->data.getName();
             patients.removeNode(curr);
+            patientHashTable->remove(id);
             
             // [Stack] Log Activity
             logs.push("Admin deleted Patient: " + patName + " (" + id + ")");
@@ -498,13 +519,13 @@ bool HospitalSystem::authenticateAdmin(string password) { return password == adm
 
 Doctor* HospitalSystem::authenticateDoctor(string id, string password) {
     Doctor* d = searchDoctorByID(id);
-    if(d && d->getPassword() == password) return d;
+    if(d && d->getPassword() == sha256(password)) return d;
     return nullptr;
 }
 
 Patient* HospitalSystem::authenticatePatient(string id, string password) {
     Patient* p = searchPatientByID(id);
-    if(p && p->getPassword() == password) return p;
+    if(p && p->getPassword() == sha256(password)) return p;
     return nullptr;
 }
 
@@ -703,7 +724,14 @@ bool HospitalSystem::changeDoctorPassword(Doctor* doctor) {
     string p1, p2;
     cout << "New Pass: "; cin >> p1;
     cout << "Confirm: "; cin >> p2;
-    if(p1 == p2) { doctor->setPassword(p1); return true; }
+    if(p1 == p2) {
+        doctor->setPassword(p1);
+        // update hash index and persist changes immediately
+        doctorHashTable->update(doctor->getDoctorID(), *doctor);
+        saveData();
+        logs.push("Password changed for Doctor: " + doctor->getDoctorID());
+        return true;
+    }
     return false;
 }
 
@@ -711,6 +739,13 @@ bool HospitalSystem::changePatientPassword(Patient* patient) {
     string p1, p2;
     cout << "New Pass: "; cin >> p1;
     cout << "Confirm: "; cin >> p2;
-    if(p1 == p2) { patient->setPassword(p1); return true; }
+    if(p1 == p2) {
+        patient->setPassword(p1);
+        // update hash index and persist changes immediately
+        patientHashTable->update(patient->getPatientID(), *patient);
+        saveData();
+        logs.push("Password changed for Patient: " + patient->getPatientID());
+        return true;
+    }
     return false;
 }

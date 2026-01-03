@@ -1,4 +1,5 @@
 #include "Patient.h"
+#include "sha256.h"
 
 Patient::Patient() : age(0) {}
 
@@ -11,11 +12,13 @@ void Patient::setPatientInfo(string id, string name, int age, string phone, stri
     this->name = name;
     this->age = age;
     this->phone = phone;
-    this->password = pwd;
+    bool looksLikeHash = (pwd.size() == 64);
+    if(looksLikeHash) setPasswordHash(pwd);
+    else setPassword(pwd);
 }
 
 void Patient::displayPatient() const {
-    cout << left << setw(10) << id 
+    cout << left << setw(15) << id 
          << setw(20) << name 
          << setw(10) << age 
          << setw(15) << phone << endl;
@@ -23,4 +26,12 @@ void Patient::displayPatient() const {
 
 string Patient::toFileString() const {
     return id + "|" + name + "|" + to_string(age) + "|" + phone + "|" + password;
+}
+
+void Patient::setPassword(string newPassword) {
+    this->password = sha256(newPassword);
+}
+
+void Patient::setPasswordHash(const string& hash) {
+    this->password = hash;
 }

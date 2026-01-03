@@ -72,25 +72,8 @@ void manualSort(LinkedList<T>& list, bool (*comp)(const T&, const T&)) {
 
 // ================= SEARCHING ALGORITHMS =================
 
-// Algorithm 1: Sequential Search with Early Termination (for exact matches)
-// Algorithm: Sequential Search
-// Time Complexity: O(n) worst case, O(1) best case
-// Space Complexity: O(1)
-// Use case: When searching for exact match and we can stop immediately
-// Returns pointer to found element, or nullptr if not found
-template <typename T>
-T* sequentialSearch(LinkedList<T>& list, bool (*matchFunc)(const T&)) {
-    typedef Node<T> ListNode;
-    ListNode* curr = list.getHead();
-    
-    while (curr) {
-        if (matchFunc(curr->data)) {
-            return &(curr->data); // Found, return immediately
-        }
-        curr = curr->next;
-    }
-    return nullptr; // Not found
-}
+// Algorithm 1: Hash Table
+
 
 // Algorithm 2: Linear Search (for partial matches and multiple results)
 // Algorithm: Linear Search

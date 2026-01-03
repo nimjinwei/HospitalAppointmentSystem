@@ -131,7 +131,7 @@ void adminPatientMgmt(HospitalSystem& sys) {
         string id, name;
         if (pc == 1) {
             printTitle("All Patients List");
-            cout << left << setw(10) << "ID" << setw(20) << "Name" 
+            cout << left << setw(15) << "ID" << setw(20) << "Name" 
                  << setw(10) << "Age" << setw(15) << "Phone" << endl;
             cout << string(55, '-') << endl;
             sys.displayAllPatients();

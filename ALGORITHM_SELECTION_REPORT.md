@@ -5,50 +5,53 @@
 
 ## Executive Summary
 
-This system implements a comprehensive set of algorithms tailored for Linked List data structures:
-1.  **Sequential Search** - For unique ID lookups (Early Termination).
-2.  **Linear Search** - For partial matches and multiple result retrieval.
-3.  **Insertion Sort** - For ordering records via in-place pointer relinking.
+This system implements a mix of algorithms optimized for typical hospital workflows:
+1.  **Hashed Lookup (unordered_map)** - For unique ID (IC) lookups with O(1) average-time retrieval.
+2.  **Linear Search** - For partial matches and multi-result queries.
+3.  **Insertion Sort** - For ordering linked-list records via pointer relinking.
 
-The selection prioritizes **memory efficiency** (O(1) space) and **implementation clarity** over complex overhead, demonstrating a strong understanding of fundamental pointer manipulation.
+The selection balances **runtime performance** for ID lookups (using a hash index) with pointer-focused implementations for list manipulation and small/medium datasets.
 
 ---
 
-## 1. Sequential Search Algorithm (Single Match)
+## 1. Hashed Lookup (Single Match by IC)
 
 ### Implementation Location
-- **File**: `Algorithms.h::sequentialSearch()`
-- **Used in**: `searchDoctorByID()`, `searchPatientByID()`
+- **File**: Index is built when loading `patients.txt` (e.g., `HospitalSystem.cpp`) and stored in an `std::unordered_map<std::string, Patient*>` (commonly named `indexByIC`).
+- **Used in**: `searchPatientByID()` (lookup by IC), and similar index for doctors if needed.
 
-### Why Sequential Search?
+### Why Hashed Lookup?
 
 #### ✅ **Reasons for Selection:**
 
-1.  **Early Termination Capability**
-    - IDs are **unique identifiers**. Once the target is found, the loop breaks immediately.
-    - **Performance**:
-        - Best case: $O(1)$ (Head node)
-        - Average case: $O(n/2)$
-    - This is significantly faster than a full traversal for specific ID lookups.
+1.  **O(1) average lookup**
+    - Exact-match lookups by IC benefit from constant average-time access.
+    - Best/average case: $O(1)$; worst case (degenerate collisions): $O(n)$ but extremely rare with a good hash.
 
-2.  **Simplicity & Robustness**
-    - No preprocessing (sorting) required.
-    - Works flawlessly on dynamic data (insertions/deletions don't break the search logic).
+2.  **Simplicity at Call Site**
+    - After building the index, search code becomes a single map lookup and a null check.
 
-3.  **Ideal for Linked Lists**
-    - Linked lists naturally support sequential access.
-    - Unlike arrays, jumping to an index is expensive ($O(n)$), making sequential scan the native approach.
+3.  **Practical for ID lookups**
+    - ICs are natural unique keys; hashing them is straightforward (`std::string` key).
+
+### Tradeoffs
+
+- **Memory**: The index stores additional pointers/keys (extra memory), an acceptable trade for much faster queries.
+- **Maintenance**: Insertions/deletions must update both the linked list and the hash index.
+
+### Security & Implementation Notes
+
+- **Password storage**: Authentication uses SHA-256 hashes stored in the data files. At runtime the input password is hashed and compared to the stored digest. This improves security over plaintext storage (see `sha256.h`/`sha256.cpp`).
+- **Index implementation**: The project uses a custom `HashTable` implementation (`HashTable.h`) with separate chaining. The hash index stores object copies/pointers and must be kept in sync when the linked list is modified.
+- **Maintenance requirements**: When adding/deleting/updating records you must update both the linked list (primary storage) and the hash table (index). The current implementation updates the index on load, add, delete and edit operations to prevent inconsistent state (and to avoid duplicate IDs being inserted).
 
 ### Why NOT Other Algorithms?
 
 #### ❌ **Binary Search**
-- **Constraint**: Requires $O(1)$ random access (indexing).
-- **Conflict**: Linked Lists only support sequential access. Finding the middle element takes $O(n/2)$.
-- **Cost**: Implementing Binary Search on a Linked List is computationally expensive ($O(n \log n)$) or requires converting to an array first (Space $O(n)$).
+- Still incompatible with linked lists without converting to an array or adding random access structures.
 
-#### ❌ **Hash Table**
-- **Cost**: High memory overhead and implementation complexity (collision handling).
-- **Verdict**: For a local hospital system with moderate data size (< 10,000 records), the overhead of a Hash Table outweighs the $O(1)$ lookup benefit.
+#### ❌ **Pure Sequential Scan (no index)**
+- For frequent ID lookups, repeated O(n) scans are much slower than hash lookups; hence the index is preferred.
 
 ---
 
@@ -116,11 +119,11 @@ The selection prioritizes **memory efficiency** (O(1) space) and **implementatio
 
 | Algorithm | Type | Time Complexity | Space | Use Case |
 |-----------|------|-----------------|-------|----------|
-| **Sequential Search** | Search | $O(n)$ Worst / $O(1)$ Best | $O(1)$ | Unique ID Lookup (Login, Find) |
+| **Hash Table (unordered_map)** | Search | $O(1)$ Avg / $O(n)$ Worst | $O(n)$ extra | Unique ID Lookup (IC → Patient)
 | **Linear Search** | Search | $O(n)$ Always | $O(1)$ | Filters, Partial Names, Reports |
 | **Insertion Sort** | Sort | $O(n^2)$ Avg / $O(n)$ Best | $O(1)$ | Reordering lists by Name/Date |
 | Binary Search | Search | $O(\log n)$ | - | **Rejected**: Incompatible with Linked List |
-| Merge Sort | Sort | $O(n \log n)$ | $O(\log n)$ | **Rejected**: Too complex for scope |
+| Merge Sort | Sort | $O(n \log n)$ | $O(\log n)$ | Useful for large datasets (future)
 
 ---
 
@@ -132,8 +135,8 @@ While Arrays + QuickSort are standard for static data, this system prioritizes *
 * **Sorting**: Our Insertion Sort implementation leverages this by simply changing pointers, avoiding the costly data copying required in array-based sorting.
 
 ### Real-world Scalability
-* **Current State**: With < 1,000 records, the $O(n^2)$ sort and $O(n)$ search are instant (< 1ms).
-* **Future Path**: If the hospital scales to 1,000,000 records, we would migrate to a **Hash Map** for IDs and **Merge Sort** for reporting.
+- **Current State**: With < 1,000 records, the index construction time is negligible and lookups are effectively instant.
+- **Future Path**: For much larger datasets (100k+), keep the hash index for ID lookups and use Merge Sort or external sorting for large-scale reporting.
 
 ---
 
