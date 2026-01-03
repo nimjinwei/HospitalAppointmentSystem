@@ -7,15 +7,6 @@ using namespace std;
 
 int main() {
     HospitalSystem system;
-    
-    // If running for the first time (no files), uncomment the following code to pre-populate data
-    /*
-    if(!system.doctorExists("D001")) {
-        system.addDoctor(Doctor("D001", "Dr. Smith", "Cardiology", "123", "R1", "123"));
-        system.addPatient(Patient("P001", "Alice", 30, "999", "123"));
-    }
-    */
-
     int userType;
     string id, pass;
 

@@ -117,7 +117,6 @@ int linearSearchAll(LinkedList<T>& list, bool (*matchFunc)(const T&), void (*pro
 }
 
 // Helper: split a string by a delimiter into a LinkedList<string>.
-// A simple alternative to std::vector for this project.
 inline void splitString(const std::string& str, char delimiter, LinkedList<std::string>& outList) {
     std::string token;
     for (char c : str) {
