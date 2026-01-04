@@ -62,7 +62,3 @@ AP001|D001|P001|2024-12-31|09:00|Completed
 - Passwords: The project hashes passwords using a built-in SHA-256 helper. For production-level security, use a salted hash (e.g., bcrypt/Argon2) and do not implement cryptography primitives by hand.
 - Privacy: IC numbers are sensitive — treat data files as confidential. Consider encrypting storage or limiting access.
 
-## Recommended next steps
-- Replace simple SHA-256 with a salted PBKDF (bcrypt/Argon2) if this is used beyond coursework.
-- Add stronger input validation for IDs (IC format checks) and phone numbers.
-- Add automated tests for authentication and duplicate-ID prevention.

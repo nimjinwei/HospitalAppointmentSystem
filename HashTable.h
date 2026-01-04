@@ -137,11 +137,11 @@ public:
                 if (chainLen > maxChain) maxChain = chainLen;
             }
         }
-        std::cout << "Hash Table Stats:\n";
-        std::cout << "  Buckets used: " << used << "/" << TABLE_SIZE << "\n";
-        std::cout << "  Total elements: " << elementCount << "\n";
-        std::cout << "  Avg chain length: " << (used ? (double)totalChain/used : 0) << "\n";
-        std::cout << "  Max chain length: " << maxChain << "\n";
+        cout << "Hash Table Stats:\n";
+        cout << "  Buckets used: " << used << "/" << TABLE_SIZE << "\n";
+        cout << "  Total elements: " << elementCount << "\n";
+        cout << "  Avg chain length: " << (used ? (double)totalChain/used : 0) << "\n";
+        cout << "  Max chain length: " << maxChain << "\n";
     }
 };
 
