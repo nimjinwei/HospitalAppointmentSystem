@@ -7,10 +7,10 @@
 #include <algorithm>
 #include <cctype>
 #include <filesystem>
-
+#include "sha256.h"
 namespace fs = std::filesystem;
 
-#include "sha256.h"
+
 
 // Comparison functions for sorting
 bool compareDocName(const Doctor& a, const Doctor& b) { return a.getName() > b.getName(); }
@@ -726,7 +726,7 @@ bool HospitalSystem::changeDoctorPassword(Doctor* doctor) {
     cout << "Confirm: "; cin >> p2;
     if(p1 == p2) {
         doctor->setPassword(p1);
-        // update hash index and persist changes immediately
+        // update hash index and persist changes
         doctorHashTable->update(doctor->getDoctorID(), *doctor);
         saveData();
         logs.push("Password changed for Doctor: " + doctor->getDoctorID());
@@ -741,7 +741,7 @@ bool HospitalSystem::changePatientPassword(Patient* patient) {
     cout << "Confirm: "; cin >> p2;
     if(p1 == p2) {
         patient->setPassword(p1);
-        // update hash index and persist changes immediately
+        // update hash index and persist changes
         patientHashTable->update(patient->getPatientID(), *patient);
         saveData();
         logs.push("Password changed for Patient: " + patient->getPatientID());
