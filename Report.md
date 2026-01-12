@@ -268,7 +268,7 @@ bool matchDoctorByName(const Doctor& d) {
 - `sortDoctorsByName()` - Sort by doctor name
 - `sortDoctorsBySpecialization()` - Sort by specialty
 - `sortPatientsByName()` - Sort by patient name
-- `sortAppointmentsByDate()` - Sort by appointment date
+- `sortAppointmentsByDateAndTime()` - Sort by appointment date
 
 **Implementation** (in `Algorithms.h`):
 ```cpp
