@@ -16,7 +16,13 @@ namespace fs = std::filesystem;
 bool compareDocName(const Doctor& a, const Doctor& b) { return a.getName() > b.getName(); }
 bool compareDocSpec(const Doctor& a, const Doctor& b) { return a.getSpecialization() > b.getSpecialization(); }
 bool comparePatName(const Patient& a, const Patient& b) { return a.getName() > b.getName(); }
-bool compareApptDate(const Appointment& a, const Appointment& b) { return a.getDate() > b.getDate(); }
+bool compareApptDateTime(const Appointment& a, const Appointment& b) {
+    if (a.getDate() != b.getDate()) {
+        return a.getDate() > b.getDate();   // sort by date
+    }
+    return a.getTime() > b.getTime();       // date same → sort by time
+}
+bool compareDocID(const Doctor& a, const Doctor& b) { return a.getDoctorID() > b.getDoctorID(); }
 
 // Search helper functions (for use with search algorithms)
 namespace SearchHelpers {
@@ -64,33 +70,50 @@ HospitalSystem::~HospitalSystem() {
 void HospitalSystem::saveData() {
     fs::path base = fs::current_path();
     cout << "[DEBUG] Saving data to folder: " << base.string() << endl;
-    // Save Doctors
-    ofstream docFile((base / "doctors.txt").string());
+
+    // ===== Save Doctors =====
+    ofstream docFile(base / "doctors.txt");
+    if (!docFile.is_open()) {
+        cout << "Error: Cannot open doctors.txt\n";
+        return;
+    }
+
     Node<Doctor>* dNode = doctors.getHead();
-    while(dNode) {
+    while (dNode) {
         docFile << dNode->data.toFileString() << endl;
         dNode = dNode->next;
     }
     docFile.close();
 
-    // Save Patients
-    ofstream patFile((base / "patients.txt").string());
+    // ===== Save Patients =====
+    ofstream patFile(base / "patients.txt");
+    if (!patFile.is_open()) {
+        cout << "Error: Cannot open patients.txt\n";
+        return;
+    }
+
     Node<Patient>* pNode = patients.getHead();
-    while(pNode) {
+    while (pNode) {
         patFile << pNode->data.toFileString() << endl;
         pNode = pNode->next;
     }
     patFile.close();
 
-    // Save Appointments
-    ofstream apptFile((base / "appointments.txt").string());
+    // ===== Save Appointments =====
+    ofstream apptFile(base / "appointments.txt");
+    if (!apptFile.is_open()) {
+        cout << "Error: Cannot open appointments.txt\n";
+        return;
+    }
+
     Node<Appointment>* aNode = appointments.getHead();
-    while(aNode) {
+    while (aNode) {
         apptFile << aNode->data.toFileString() << endl;
         aNode = aNode->next;
     }
     apptFile.close();
 }
+
 
 void HospitalSystem::loadData() {
     fs::path base = fs::current_path();
@@ -224,8 +247,8 @@ void HospitalSystem::deleteDoctor(string id) {
 void HospitalSystem::displayAllDoctors() {
     if(doctors.isEmpty()) { cout << "No doctors.\n"; return; }
     cout << "\n" << left << setw(10) << "ID" << setw(20) << "Name" 
-         << setw(20) << "Specialization" << setw(15) << "Phone" << endl;
-    cout << string(65, '-') << endl;
+         << setw(20) << "Specialization" << setw(15) << "Phone" << setw(15)<< "Room"<< endl;
+    cout << string(70, '-') << endl;
     Node<Doctor>* curr = doctors.getHead();
     while(curr) {
         curr->data.displayDoctor();
@@ -233,6 +256,9 @@ void HospitalSystem::displayAllDoctors() {
     }
 }
 
+void HospitalSystem::sortDoctorsByID(){
+    manualSort(doctors, compareDocID);
+}
 void HospitalSystem::sortDoctorsByName() {
     manualSort(doctors, compareDocName);
     cout << "Doctors sorted by name.\n";
@@ -290,6 +316,7 @@ void HospitalSystem::searchDoctorBySpecializationForPatient(string spec) {
     SearchHelpers::searchSpec = spec;
     linearSearchAll<Doctor>(doctors, SearchHelpers::matchDoctorBySpec,
                            SearchHelpers::processDoctorDisplayForPatient);
+    sortDoctorsByID();
 }
 
 // ================= PATIENT OPS =================
@@ -325,7 +352,6 @@ void HospitalSystem::displayAllPatients() {
 
 void HospitalSystem::sortPatientsByName() {
     manualSort(patients, comparePatName);
-    cout << "Sorted by name.\n";
 }
 
 bool HospitalSystem::patientExists(string id) { return patientHashTable->exists(id); }
@@ -390,10 +416,11 @@ void HospitalSystem::displayAllAppointments() {
     }
 }
 
-void HospitalSystem::sortAppointmentsByDate() {
-    manualSort(appointments, compareApptDate);
-    cout << "Sorted by date.\n";
+void HospitalSystem::sortAppointmentsByDateAndTime() {
+    manualSort(appointments, compareApptDateTime);
 }
+
+
 
 string HospitalSystem::generateAppointmentID() {
     return "APT" + to_string(appointments.getSize() + 1001);
@@ -402,6 +429,7 @@ string HospitalSystem::generateAppointmentID() {
 void HospitalSystem::searchAppointmentByDoctorID(string id) {
     // Use Linear Search: O(n)
     // Multiple appointments possible for one doctor, must check all elements
+    sortAppointmentsByDateAndTime();
     SearchHelpers::searchID = id;
     linearSearchAll<Appointment>(appointments, SearchHelpers::matchAppointmentByDoctorID,
                                 SearchHelpers::processAppointmentDisplay);
@@ -410,6 +438,7 @@ void HospitalSystem::searchAppointmentByDoctorID(string id) {
 void HospitalSystem::searchAppointmentByPatientID(string id) {
     // Use Linear Search: O(n)
     // Multiple appointments possible for one patient, must check all elements
+        sortAppointmentsByDateAndTime();
     SearchHelpers::searchID = id;
     linearSearchAll<Appointment>(appointments, SearchHelpers::matchAppointmentByPatientID,
                                 SearchHelpers::processAppointmentDisplay);
@@ -712,6 +741,7 @@ void HospitalSystem::viewTodayScheduleByDoctorID(string doctorID) {
         curr = curr->next;
     }
     if(!found) cout << "No appointments today.\n";
+    sortAppointmentsByDateAndTime();
 }
 
 void HospitalSystem::displayStatistics() {

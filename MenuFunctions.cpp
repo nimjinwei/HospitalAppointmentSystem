@@ -28,9 +28,8 @@ void adminDoctorMgmt(HospitalSystem& sys) {
         cout << "  [1] Add Doctor" << endl;
         cout << "  [2] Edit Doctor Information" << endl;
         cout << "  [3] Delete Doctor" << endl;
-        cout << "  [4] Search Doctor by ID" << endl;
+        cout << "  [4] Search Doctor" << endl;
         cout << "  [5] List All Doctors" << endl;
-        cout << "  [6] Sort Doctors by Name" << endl;
         cout << "  [0] Back to Main Menu" << endl;
         printSeparator();
         cout << "Please select an option: ";
@@ -88,25 +87,81 @@ void adminDoctorMgmt(HospitalSystem& sys) {
             }
         } else if (c == 4) {
             printTitle("Search Doctor");
-            cout << "Enter Doctor ID: "; cin >> id;
-            Doctor* d = sys.searchDoctorByID(id);
-            if (d) {
-                cout << "\nDoctor Found:" << endl;
+            cout << "Search by: [1] ID  [2] Specialization" << endl;
+            cout << "Choice: ";
+            int searchChoice; cin >> searchChoice;
+            
+            if (searchChoice == 1) {
+                cout << "Enter Doctor ID: "; cin >> id;
+                Doctor* d = sys.searchDoctorByID(id);
+                if (d) {
+                    cout << "\nDoctor Found:" << endl;
+                    cout << left << setw(10) << "ID" << setw(20) << "Name" 
+                         << setw(20) << "Specialization" << setw(15) << "Phone" << setw(15) << "Room" << endl;
+                    cout << string(65, '-') << endl;
+                    d->displayDoctor();
+                    cout << endl;
+                } else {
+                    cout << "\n[ERROR] Doctor not found!\n" << endl;
+                }
+            } else if (searchChoice == 2) {
+                cout << "\nAvailable Specializations:" << endl;
+                sys.displayAvailableSpecializations();
+                cout << "\nEnter Specialization name or number: ";
+                cin.ignore();
+                string specInput;
+                getline(cin, specInput);
+                string spec = specInput;
+                
+                // If user entered a number, map to the displayed specialization list
+                LinkedList<string> specs;
+                sys.getAllSpecializations(specs);
+                bool isNumber = !specInput.empty() && all_of(specInput.begin(), specInput.end(), 
+                    [](char ch){ return isdigit((unsigned char)ch); });
+                
+                if (isNumber) {
+                    int idx = stoi(specInput);
+                    Node<string>* node = specs.getHead();
+                    int i = 1;
+                    while (node && i < idx) { 
+                        node = node->next; 
+                        ++i; 
+                    }
+                    if (node) spec = node->data;
+                }
+                
+                cout << "\nSearch Results:" << endl;
                 cout << left << setw(10) << "ID" << setw(20) << "Name" 
                      << setw(20) << "Specialization" << setw(15) << "Phone" << endl;
                 cout << string(65, '-') << endl;
-                d->displayDoctor();
+                sys.searchDoctorBySpecialization(spec);
                 cout << endl;
             } else {
-                cout << "\n[ERROR] Doctor not found!\n" << endl;
+                cout << "\n[ERROR] Invalid choice!\n" << endl;
             }
         } else if (c == 5) {
-            printTitle("All Doctors List");
-            sys.displayAllDoctors();
+            printTitle("List All Doctors");
+            cout << "Sort by: [1] ID  [2] Name  [3] Specialization" << endl;
+            cout << "Choice: ";
+            int sortChoice; cin >> sortChoice;
+            switch(sortChoice) {
+                case 1: 
+                    sys.sortDoctorsByID();
+                    sys.displayAllDoctors();
+                    break;
+                case 2:
+                    sys.sortDoctorsByName();
+                    sys.displayAllDoctors();
+                    break;
+                case 3:
+                    sys.sortDoctorsBySpecialization();
+                    sys.displayAllDoctors();
+                    break;
+                default:
+                    cout << "\n[ERROR] Invalid choice, showing unsorted list\n";
+                    sys.displayAllDoctors();
+            }
             cout << endl;
-        } else if (c == 6) {
-            sys.sortDoctorsByName();
-            cout << "\n[SUCCESS] Sorting completed!\n" << endl;
         } else if (c != 0) {
             cout << "\n[ERROR] Invalid option, please try again!\n" << endl;
         }
@@ -118,11 +173,9 @@ void adminPatientMgmt(HospitalSystem& sys) {
     do {
         printTitle("Patient Management");
         cout << "  [1] List All Patients" << endl;
-        cout << "  [2] Search Patient by ID" << endl;
-        cout << "  [3] Search Patient by Name" << endl;
-        cout << "  [4] Edit Patient Information" << endl;
-        cout << "  [5] Delete Patient" << endl;
-        cout << "  [6] Sort Patients by Name" << endl;
+        cout << "  [2] Search Patient" << endl;
+        cout << "  [3] Edit Patient Information" << endl;
+        cout << "  [4] Delete Patient" << endl;
         cout << "  [0] Back to Main Menu" << endl;
         printSeparator();
         cout << "Please select an option: ";
@@ -130,37 +183,61 @@ void adminPatientMgmt(HospitalSystem& sys) {
         
         string id, name;
         if (pc == 1) {
-            printTitle("All Patients List");
-            cout << left << setw(15) << "ID" << setw(20) << "Name" 
+            printTitle("List All Patients");
+            cout << "Sort by: [1] ID (insertion order)  [2] Name" << endl;
+            cout << "Choice: ";
+            int sortChoice; cin >> sortChoice;
+            
+            cout << "\n" << left << setw(15) << "ID" << setw(20) << "Name" 
                  << setw(10) << "Age" << setw(15) << "Phone" << endl;
             cout << string(55, '-') << endl;
-            sys.displayAllPatients();
+            
+            switch(sortChoice) {
+                case 1:
+                    // No sorting - display in insertion order
+                    sys.displayAllPatients();
+                    break;
+                case 2:
+                    sys.sortPatientsByName();
+                    sys.displayAllPatients();
+                    break;
+                default:
+                    cout << "\n[ERROR] Invalid choice, showing unsorted list\n";
+                    sys.displayAllPatients();
+            }
             cout << endl;
         } else if (pc == 2) {
             printTitle("Search Patient");
-            cout << "Enter Patient ID: "; cin >> id;
-            Patient* p = sys.searchPatientByID(id);
-            if (p) {
-                cout << "\nPatient Found:" << endl;
-                cout << left << setw(10) << "ID" << setw(20) << "Name" 
+            cout << "Search by: [1] ID  [2] Name" << endl;
+            cout << "Choice: ";
+            int searchChoice; cin >> searchChoice;
+            
+            if (searchChoice == 1) {
+                cout << "Enter Patient ID: "; cin >> id;
+                Patient* p = sys.searchPatientByID(id);
+                if (p) {
+                    cout << "\nPatient Found:" << endl;
+                    cout << left << setw(15) << "ID" << setw(20) << "Name" 
+                         << setw(10) << "Age" << setw(15) << "Phone" << endl;
+                    cout << string(55, '-') << endl;
+                    p->displayPatient();
+                    cout << endl;
+                } else {
+                    cout << "\n[ERROR] Patient not found!\n" << endl;
+                }
+            } else if (searchChoice == 2) {
+                cout << "Enter Patient Name (partial match supported): "; 
+                cin.ignore(); getline(cin, name);
+                cout << "\nSearch Results:" << endl;
+                cout << left << setw(15) << "ID" << setw(20) << "Name" 
                      << setw(10) << "Age" << setw(15) << "Phone" << endl;
                 cout << string(55, '-') << endl;
-                p->displayPatient();
+                sys.searchPatientByName(name);
                 cout << endl;
             } else {
-                cout << "\n[ERROR] Patient not found!\n" << endl;
+                cout << "\n[ERROR] Invalid choice!\n" << endl;
             }
         } else if (pc == 3) {
-            printTitle("Search Patient by Name");
-            cout << "Enter Patient Name: "; 
-            cin.ignore(); getline(cin, name);
-            cout << "\nSearch Results:" << endl;
-            cout << left << setw(10) << "ID" << setw(20) << "Name" 
-                 << setw(10) << "Age" << setw(15) << "Phone" << endl;
-            cout << string(55, '-') << endl;
-            sys.searchPatientByName(name);
-            cout << endl;
-        } else if (pc == 4) {
             printTitle("Edit Patient Information");
             cout << "Enter Patient ID to edit: "; cin >> id;
             Patient* p = sys.searchPatientByID(id);
@@ -171,7 +248,7 @@ void adminPatientMgmt(HospitalSystem& sys) {
             } else {
                 cout << "\n[ERROR] Patient not found!\n" << endl;
             }
-        } else if (pc == 5) {
+        } else if (pc == 4) {
             printTitle("Delete Patient");
             cout << "[WARNING] Deleting patient will also delete all related appointments!" << endl;
             cout << "Enter Patient ID to delete: "; cin >> id;
@@ -190,9 +267,6 @@ void adminPatientMgmt(HospitalSystem& sys) {
             } else {
                 cout << "\n[ERROR] Patient not found!\n" << endl;
             }
-        } else if (pc == 6) {
-            sys.sortPatientsByName();
-            cout << "\n[SUCCESS] Sorting completed!\n" << endl;
         } else if (pc != 0) {
             cout << "\n[ERROR] Invalid option, please try again!\n" << endl;
         }
@@ -211,7 +285,6 @@ void adminAppointmentMgmt(HospitalSystem& sys) {
         cout << "  [6] Cancel Appointment" << endl;
         cout << "  [7] Mark Appointment as Completed" << endl;
         cout << "  [8] Delete Appointment Record" << endl;
-        cout << "  [9] Sort Appointments by Date" << endl;
         cout << "  [0] Back to Main Menu" << endl;
         printSeparator();
         cout << "Please select an option: ";
@@ -220,6 +293,8 @@ void adminAppointmentMgmt(HospitalSystem& sys) {
         string id;
         if (ac == 1) {
             printTitle("All Appointments List");
+            // Automatically sort by date before displaying
+            sys.sortAppointmentsByDateAndTime();
             cout << left << setw(10) << "Appt ID" << setw(12) << "Doctor ID" 
                  << setw(15) << "Patient ID" << setw(15) << "Date" 
                  << setw(10) << "Time" << setw(15) << "Status" << endl;
@@ -230,7 +305,7 @@ void adminAppointmentMgmt(HospitalSystem& sys) {
             printTitle("View Appointments by Doctor");
             cout << "Enter Doctor ID: "; cin >> id;
             if (sys.doctorExists(id)) {
-                cout << "\nAll Appointments for this Doctor:" << endl;
+                cout << "\nAll Appointments for this Doctor (sorted by date):" << endl;
                 cout << left << setw(10) << "Appt ID" << setw(12) << "Doctor ID" 
                      << setw(12) << "Patient ID" << setw(15) << "Date" 
                      << setw(10) << "Time" << setw(15) << "Status" << endl;
@@ -244,7 +319,7 @@ void adminAppointmentMgmt(HospitalSystem& sys) {
             printTitle("View Appointments by Patient");
             cout << "Enter Patient ID: "; cin >> id;
             if (sys.patientExists(id)) {
-                cout << "\nAll Appointments for this Patient:" << endl;
+                cout << "\nAll Appointments for this Patient (sorted by date):" << endl;
                 cout << left << setw(10) << "Appt ID" << setw(12) << "Doctor ID" 
                      << setw(12) << "Patient ID" << setw(15) << "Date" 
                      << setw(10) << "Time" << setw(15) << "Status" << endl;
@@ -313,9 +388,6 @@ void adminAppointmentMgmt(HospitalSystem& sys) {
             } else {
                 cout << "\n[ERROR] Appointment not found!\n" << endl;
             }
-        } else if (ac == 9) {
-            sys.sortAppointmentsByDate();
-            cout << "\n[SUCCESS] Sorting completed!\n" << endl;
         } else if (ac != 0) {
             cout << "\n[ERROR] Invalid option, please try again!\n" << endl;
         }

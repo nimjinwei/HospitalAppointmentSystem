@@ -69,6 +69,7 @@ public:
     void displayDoctorsBrief();
     void sortDoctorsByName();
     void sortDoctorsBySpecialization();
+    void sortDoctorsByID();
     bool doctorExists(string id);
     string selectSpecialization(); // Helper
     void displayAvailableSpecializations(); // Helper
@@ -93,7 +94,7 @@ public:
     void searchAppointmentByDoctorID(string id);
     void searchAppointmentByPatientID(string id);
     void displayAllAppointments();
-    void sortAppointmentsByDate();
+    void sortAppointmentsByDateAndTime();
     bool appointmentExists(string id);
     void displayAppointmentDetails(string apptID);
     
