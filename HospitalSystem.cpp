@@ -336,8 +336,6 @@ void HospitalSystem::addPatient(const Patient& p) {
 }
 
 Patient* HospitalSystem::searchPatientByID(string id) {
-    // Use Sequential Search: O(n) worst case, O(1) best case
-    // Stops immediately when ID is found (exact match, unique ID)
     SearchHelpers::searchID = id;
     return patientHashTable->search(id);
 }

@@ -5,7 +5,7 @@ doctors.txt example:
 This is a C++ console application implementing a small hospital appointment management system with three roles: administrator, doctor, and patient. The project focuses on manual implementations of core data structures and algorithms (linked lists, stack, custom hash table) rather than STL containers.
 
 ## Important Design Choices
-- **Patient / Doctor ID**: The system uses the real-world identifier (IC / national ID) as the unique ID for patients (and a similar ID for doctors). IDs are stored as `string` to preserve leading zeros and formatting.
+- **Patient**: The system uses the real-world identifier (IC / national ID) as the unique ID for patients. IDs are stored as `string` to preserve leading zeros and formatting.
 - **Password storage**: Passwords are stored as SHA-256 hex digests in the data files. At runtime, user input is hashed with SHA-256 and compared to the stored digest. This avoids storing plaintext passwords.
 - **Fast ID lookup**: The system maintains a custom `HashTable` (separate chaining) for O(1) average-time lookups by ID. The linked lists remain the primary storage and are used for ordered traversals and sorting.
 

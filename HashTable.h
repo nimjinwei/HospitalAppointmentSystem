@@ -125,24 +125,6 @@ public:
             }
         }
     }
-    
-    // Statistics (optional - for debugging)
-    void printStatistics() const {
-        int used = 0, maxChain = 0, totalChain = 0;
-        for (int i = 0; i < TABLE_SIZE; i++) {
-            if (table[i]) {
-                used++;
-                int chainLen = table[i]->getSize();
-                totalChain += chainLen;
-                if (chainLen > maxChain) maxChain = chainLen;
-            }
-        }
-        cout << "Hash Table Stats:\n";
-        cout << "  Buckets used: " << used << "/" << TABLE_SIZE << "\n";
-        cout << "  Total elements: " << elementCount << "\n";
-        cout << "  Avg chain length: " << (used ? (double)totalChain/used : 0) << "\n";
-        cout << "  Max chain length: " << maxChain << "\n";
-    }
 };
 
 #endif

@@ -87,7 +87,7 @@ void adminDoctorMgmt(HospitalSystem& sys) {
             }
         } else if (c == 4) {
             printTitle("Search Doctor");
-            cout << "Search by: [1] ID  [2] Specialization" << endl;
+            cout << "Search by: [1] ID  [2] Specialization  [3] Name" << endl;
             cout << "Choice: ";
             int searchChoice; cin >> searchChoice;
             
@@ -135,6 +135,15 @@ void adminDoctorMgmt(HospitalSystem& sys) {
                      << setw(20) << "Specialization" << setw(15) << "Phone" << endl;
                 cout << string(65, '-') << endl;
                 sys.searchDoctorBySpecialization(spec);
+                cout << endl;
+            } else if (searchChoice == 3) {
+                cout << "Enter Doctor Name (partial match supported): "; 
+                string nameInput; cin.ignore(); getline(cin, nameInput);
+                cout << "\nSearch Results:" << endl;
+                cout << left << setw(10) << "ID" << setw(20) << "Name" 
+                     << setw(20) << "Specialization" << setw(15) << "Phone" << endl;
+                cout << string(65, '-') << endl;
+                sys.searchDoctorByName(nameInput);
                 cout << endl;
             } else {
                 cout << "\n[ERROR] Invalid choice!\n" << endl;
@@ -538,7 +547,7 @@ void patientMenu(HospitalSystem& system, Patient* pat) {
         cout << "  [2] My Appointments" << endl;
         cout << "  [3] Cancel Appointment" << endl;
         cout << "  [4] View All Doctors" << endl;
-        cout << "  [5] Search Doctors by Specialization" << endl;
+        cout << "  [5] Search Doctors" << endl;
         cout << "  [6] Change Password" << endl;
         cout << "  [0] Logout" << endl;
         printSeparator();
@@ -640,7 +649,55 @@ void patientMenu(HospitalSystem& system, Patient* pat) {
             system.displayDoctorsBrief();
             cout << endl;
         } else if (c == 5) {
-            printTitle("Search Doctors by Specialization");
+            printTitle("Search Doctors");
+            cout << "Search by: [1] Specialization  [2] Name" << endl;
+            cout << "Choice: ";
+            int searchChoice; cin >> searchChoice;
+            
+            if (searchChoice == 1) {
+                cout << "\nAvailable Specializations:" << endl;
+                system.displayAvailableSpecializations();
+                cout << "\nEnter Specialization name or number: ";
+                cin.ignore();
+                string specInput;
+                getline(cin, specInput);
+                string spec = specInput;
+                
+                // If user entered a number, map to the displayed specialization list
+                LinkedList<string> specs;
+                system.getAllSpecializations(specs);
+                bool isNumber = !specInput.empty() && all_of(specInput.begin(), specInput.end(), 
+                    [](char ch){ return isdigit((unsigned char)ch); });
+                
+                if (isNumber) {
+                    int idx = stoi(specInput);
+                    Node<string>* node = specs.getHead();
+                    int i = 1;
+                    while (node && i < idx) { 
+                        node = node->next; 
+                        ++i; 
+                    }
+                    if (node) spec = node->data;
+                }
+                
+                cout << "\nSearch Results:" << endl;
+                cout << left << setw(10) << "ID" << setw(20) << "Name" 
+                     << setw(20) << "Specialization" << setw(15) << "Phone" << endl;
+                cout << string(65, '-') << endl;
+                system.searchDoctorBySpecialization(spec);
+                cout << endl;
+            } else if (searchChoice == 2) {
+                cout << "Enter Doctor Name (partial match supported): "; 
+                string nameInput; cin.ignore(); getline(cin, nameInput);
+                cout << "\nSearch Results:" << endl;
+                cout << left << setw(10) << "ID" << setw(20) << "Name" 
+                     << setw(20) << "Specialization" << setw(15) << "Phone" << endl;
+                cout << string(65, '-') << endl;
+                system.searchDoctorByName(nameInput);
+                cout << endl;
+            } else {
+                cout << "\n[ERROR] Invalid choice!\n" << endl;
+            }
             system.displayAvailableSpecializations();
             cout << "\nEnter Specialization name or number: ";
             cin.ignore();

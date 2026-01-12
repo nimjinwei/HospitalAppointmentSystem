@@ -72,7 +72,7 @@ void manualSort(LinkedList<T>& list, bool (*comp)(const T&, const T&)) {
 
 // ================= SEARCHING ALGORITHMS =================
 
-// Algorithm 1: Hash Table
+// Algorithm 1: Hash based search
 
 
 // Algorithm 2: Linear Search (for partial matches and multiple results)
